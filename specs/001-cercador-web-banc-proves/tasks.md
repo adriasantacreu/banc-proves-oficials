@@ -28,13 +28,13 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Extreure els enunciats, solucions i imatges 200 DPI de `pau-catalog` i `gencat-cb-forms` en un catàleg unificat `public/data/proves.json` i `public/crops/`.
 
-- [ ] T006 Crear script `scripts/export_catalog.py` que llegeix la base de dades SQLite `pau_catalog.db` (189 exercicis PAU)
-- [ ] T007 Incorporar al script l'extracció de les proves de Competències Bàsiques (4t ESO i 2n ESO) des de `gencat-cb-forms` / `docencia/materials/competencies_basiques/`
-- [ ] T008 [P] Optimització de captures: copiar/convertir les imatges a `public/crops/` amb noms unificats i mida comprimida sense pèrdua de nitidesa (200 DPI)
-- [ ] T009 Generar el fitxer d'índex estàtic `public/data/proves.json` amb l'esquema d'entitat definit a la spec
-- [ ] T010 Validar que el JSON generat conté tots els camps requerits i que totes les rutes d'imatge existeixen
+- [x] T006 Crear script `scripts/export_catalog.py` que llegeix la base de dades SQLite `pau_catalog.db` (163 exercicis PAU; el README de pau-catalog parla de 189, però la DB en té 163)
+- [x] T007 Incorporar al script l'extracció de les proves de Competències Bàsiques (4t ESO i 2n ESO) des de `gencat-cb-forms` / `docencia/materials/competencies_basiques/` (627 ítems; fallback OCR tesseract pels PDF amb CMap trencat)
+- [x] T008 [P] Optimització de captures: copiar/convertir les imatges a `public/crops/` amb noms unificats i mida comprimida sense pèrdua de nitidesa (200 DPI, WebP lossless)
+- [x] T009 Generar el fitxer d'índex estàtic `public/data/proves.json` amb l'esquema d'entitat definit a la spec (790 exercicis: 163 PAU + 413 CB 4t + 214 CB 2n)
+- [x] T010 Validar que el JSON generat conté tots els camps requerits i que totes les rutes d'imatge existeixen (`--check`; 0 errors; 13 PAU d'anys vells sense captura, cas previst a la spec)
 
-**Punt de control**: `public/data/proves.json` llest i imatges presents a `public/crops/`.
+**Punt de control**: `public/data/proves.json` llest i imatges presents a `public/crops/`. ✅ (2026-09-28, 46,7 MB de WebP)
 
 ---
 
