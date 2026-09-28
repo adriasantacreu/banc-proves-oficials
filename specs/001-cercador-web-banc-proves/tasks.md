@@ -14,13 +14,13 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Configurar l'entorn de desenvolupament Vite + TypeScript + Tailwind CSS i validar el build estàtic.
 
-- [ ] T001 Inicialitzar `package.json` amb Vite, TypeScript i Tailwind CSS a `projects/banc-proves-oficials/`
-- [ ] T002 [P] Configurar `vite.config.ts` amb base `/banc-proves-oficials/` per a GitHub Pages
-- [ ] T003 [P] Configurar `tailwind.config.js` i `src/styles/app.css` amb suport per a components i `@media print`
-- [ ] T004 [P] Instal·lar `minisearch` per al cercador del client
-- [ ] T005 Crear `index.html` base amb capçalera, cerca, filtres i contenidor de resultats
+- [x] T001 Inicialitzar `package.json` amb Vite, TypeScript i Tailwind CSS a `projects/banc-proves-oficials/`
+- [x] T002 [P] Configurar `vite.config.ts` amb base `/banc-proves-oficials/` per a GitHub Pages
+- [x] T003 [P] Configurar Tailwind i `src/styles/app.css` amb suport per a components i `@media print` (v4: config CSS-first a `app.css` + `tailwind.config.js` mínim)
+- [x] T004 [P] Instal·lar `minisearch` per al cercador del client
+- [x] T005 Crear `index.html` base amb capçalera, cerca, filtres i contenidor de resultats (a l'arrel del projecte, convenció Vite)
 
-**Punt de control**: `npm run build` genera la carpeta `dist/` sense errors.
+**Punt de control**: `npm run build` genera la carpeta `dist/` sense errors. ✅ (2026-09-28)
 
 ---
 

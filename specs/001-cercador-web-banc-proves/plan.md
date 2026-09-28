@@ -62,13 +62,13 @@ projects/banc-proves-oficials/
 │   ├── crops/                     # Imatges 200 DPI dels enunciats i solucions
 │   └── data/                      # proves.json (índex d'exercicis)
 ├── src/
-│   ├── index.html
-│   ├── main.ts                    # Punt d'entrada de l'aplicació
-│   ├── search.ts                  # Configuració de MiniSearch
-│   ├── cart.ts                    # Gestió del carret de preguntes (localStorage)
-│   ├── print.ts                   # Vista i formatació de la fitxa A4
+│   ├── main.ts                       # Punt d'entrada de l'aplicació
+│   ├── search.ts                     # Configuració de MiniSearch
+│   ├── cart.ts                       # Gestió del carret de preguntes (localStorage)
+│   ├── print.ts                      # Vista i formatació de la fitxa A4
 │   └── styles/
-│       └── app.css                # Tailwind + estils d'impressió @media print
+│       └── app.css                   # Tailwind + estils d'impressió @media print
+├── index.html                      # Base de l'app (arrel del projecte, convenció Vite)
 ├── package.json
 ├── vite.config.ts
 └── README.md

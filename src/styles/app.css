@@ -1,0 +1,19 @@
+/* Tailwind CSS v4 (import únic; la configuració d'estil va amb @theme) */
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* ==== Estils base de l'aplicació ==== */
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-100 text-slate-800 font-sans;
+}
+
+/* ==== Impressió de la fitxa A4 (completa a la F5) ==== */
+@media print {
+  body {
+    background: white;
+  }
+}
