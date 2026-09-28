@@ -42,13 +42,13 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Carregar el catàleg, configurar la cerca instantània amb MiniSearch i mostrar les preguntes i solucions oficials.
 
-- [ ] T011 [US1] `src/search.ts`: Carregar `proves.json`, inicialitzar MiniSearch amb cerca de prefixos i normalització catalana d'accents
-- [ ] T012 [US1] `src/ui.ts`: Renderitzar les targetes d'exercici amb insígnies d'etapa (PAU / CCBB), matèria, any, convocatòria i punts
-- [ ] T013 [US1] Implementar els filtres visuals per etapa, matèria i any amb recompte de resultats en viu
-- [ ] T014 [US2] `src/solution.ts`: Afegir botó desplegable per veure la solució oficial i criteris de correcció a cada targeta
-- [ ] T015 [US1] Implementar estat buit quan no hi ha resultats amb suggeriments de termes
+- [x] T011 [US1] `src/search.ts`: Carregar `proves.json`, inicialitzar MiniSearch amb cerca de prefixos i normalització catalana d'accents
+- [x] T012 [US1] `src/ui.ts`: Renderitzar les targetes d'exercici amb insígnies d'etapa (PAU / CCBB), matèria, any, convocatòria i punts
+- [x] T013 [US1] Implementar els filtres visuals per etapa, matèria i any amb recompte de resultats en viu
+- [x] T014 [US2] `src/solution.ts`: Afegir botó desplegable per veure la solució oficial i criteris de correcció a cada targeta
+- [x] T015 [US1] Implementar estat buit quan no hi ha resultats amb suggeriments de termes
 
-**Punt de control**: Es pot cercar "matriu" o "probabilitat" i veure instantàniament les captures i desplegar solucions.
+**Punt de control**: Es pot cercar "matriu" o "probabilitat" i veure instantàniament les captures i desplegar solucions. ✅ (48 resultats per «matriu»; «calcul» troba «càlcul»; 0 errors JS)
 
 ---
 
@@ -56,12 +56,12 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Facilitar la còpia d'imatges al porta-retalls i la gestió del carret de preguntes.
 
-- [ ] T016 [US3] `src/clipboard.ts`: Implementar botó "Copia imatge" usant `navigator.clipboard.write` amb Blob PNG i feedback visual temporal ("Copiat!")
-- [ ] T017 [US3] Afegir alternativa ("Descarrega imatge") si el navegador bloqueja el permís del porta-retalls
-- [ ] T018 [US4] `src/cart.ts`: Implementar lògica de carret (afegir/eliminar exercici, persistència a `localStorage`, comptador flotant)
-- [ ] T019 [US4] Crear el panell lateral o modal del carret per revisar les preguntes seleccionades i reordenar-les
+- [x] T016 [US3] `src/clipboard.ts`: Implementar botó "Copia imatge" usant `navigator.clipboard.write` amb Blob PNG i feedback visual temporal ("Copiat!")
+- [x] T017 [US3] Afegir alternativa ("Descarrega imatge") si el navegador bloqueja el permís del porta-retalls
+- [x] T018 [US4] `src/cart.ts`: Implementar lògica de carret (afegir/eliminar exercici, persistència a `localStorage`, comptador flotant)
+- [x] T019 [US4] Crear el panell lateral o modal del carret per revisar les preguntes seleccionades i reordenar-les
 
-**Punt de control**: Clicar "Copia imatge" permet enganxar directament a un document extern (`Ctrl+V`), i el carret guarda les seleccions.
+**Punt de control**: Clicar "Copia imatge" permet enganxar directament a un document extern (`Ctrl+V`), i el carret guarda les seleccions. ✅ (PNG `image/png` verificat al porta-retalls amb Playwright)
 
 ---
 
@@ -69,12 +69,12 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Mode fitxa imprimible neta en A4 (`@media print`) llesta per generar PDF o imprimir directament.
 
-- [ ] T020 [US4] `src/print.ts`: Generar la vista de fitxa A4 a partir del contingut del carret
-- [ ] T021 [US4] Dissenyar estils `@media print` a `src/styles/app.css`: ocultar barres de navegació, capçalera editable (Títol, Curs, Data, Nom de l'alumne), i numeració consecutiva dels exercicis
-- [ ] T022 [US4] Afegir regles anti-tall de pàgina (`page-break-inside: avoid`) perquè cap enunciat quedi partit entre dues pàgines
-- [ ] T023 [US4] Botó per llançar el diàleg d'impressió del navegador (`window.print()`) i botó per buidar la fitxa
+- [x] T020 [US4] `src/print.ts`: Generar la vista de fitxa A4 a partir del contingut del carret
+- [x] T021 [US4] Dissenyar estils `@media print` a `src/styles/app.css`: ocultar barres de navegació, capçalera editable (Títol, Curs, Data, Nom de l'alumne), i numeració consecutiva dels exercicis
+- [x] T022 [US4] Afegir regles anti-tall de pàgina (`page-break-inside: avoid`) perquè cap enunciat quedi partit entre dues pàgines
+- [x] T023 [US4] Botó per llançar el diàleg d'impressió del navegador (`window.print()`) i botó per buidar la fitxa
 
-**Punt de control**: La fitxa generada s'imprimeix de manera impecable des de `Ctrl+P`.
+**Punt de control**: La fitxa generada s'imprimeix de manera impecable des de `Ctrl+P`. ✅ (app oculta en print, break-inside avoid, capçalera editable)
 
 ---
 
@@ -82,11 +82,11 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Automatitzar la compilació i publicació a GitHub Pages.
 
-- [ ] T024 Crear `.github/workflows/deploy.yml` per compilar el projecte Vite i desplegar a GitHub Pages amb `actions/deploy-pages`
-- [ ] T025 Crear `README.md` complet del repositori amb instruccions d'ús per a docents i desenvolupadors
-- [ ] T026 Comprovar que la ruta base i els enllaços funcionen tant en local com en la subruta `/banc-proves-oficials/`
+- [x] T024 Crear `.github/workflows/deploy.yml` per compilar el projecte Vite i desplegar a GitHub Pages amb `actions/deploy-pages`
+- [x] T025 Crear `README.md` complet del repositori amb instruccions d'ús per a docents i desenvolupadors
+- [x] T026 Comprovar que la ruta base i els enllaços funcionen tant en local com en la subruta `/banc-proves-oficials/`
 
-**Punt de control**: Workflow de GitHub Actions vàlid i llest per activar a GitHub.
+**Punt de control**: Workflow de GitHub Actions vàlid i llest per activar a GitHub. ✅ (pendent de crear el repo remot i activar Pages)
 
 ---
 
@@ -94,8 +94,8 @@ description: "Llista de tasques del cercador web del Banc de proves oficials"
 
 **Objectiu**: Publicar l'article del projecte i enllaçar-lo des dels recursos docents al portafoli personal.
 
-- [ ] T027 Crear article a `projects/portafoli-github/adriasantacreu.github.io/src/content/projects/banc-proves-oficials/` (català, castellà, anglès)
-- [ ] T028 Documentar l'enginyeria documental del projecte (captures a 200 DPI amb OpenCV, indexació FTS client-side)
-- [ ] T029 Afegir targeta destacada a la secció de "Recursos docents" del portafoli amb accés directe a la demo i al codi font
+- [x] T027 Crear article a `projects/portafoli-github/adriasantacreu.github.io/src/content/projects/banc-proves-oficials/` (català, castellà, anglès)
+- [x] T028 Documentar l'enginyeria documental del projecte (captures a 200 DPI amb OpenCV, indexació FTS client-side)
+- [x] T029 Afegir targeta destacada a la secció de "Recursos docents" del portafoli amb accés directe a la demo i al codi font
 
-**Punt de control**: Portafoli compilat amb èxit (`npm run build`) amb el nou projecte visible.
+**Punt de control**: Portafoli compilat amb èxit (`npm run build`) amb el nou projecte visible. ✅ (54 pàgines, check:links verd; pendent de push)
