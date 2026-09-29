@@ -47,4 +47,4 @@ GitHub Actions (`.github/workflows/deploy.yml`) compila i publica automàticamen
 
 ## Crèdits
 
-Fet per [Adrià Santacreu](https://adriasantacreu.github.io) · professor de matemàtiques i programació a l'Institut Escola Sant Pol de Mar. Proves oficials del [Departament d'Educació i Formació Professional](https://educacio.gencat.cat) i de la [Generalitat de Catalunya](https://gencat.cat).
+Fet per [Adrià Santacreu](https://adriasantacreu.github.io) · projecte personal. Formularis autocorregibles de Competències Bàsiques: [carpeta de Drive](https://drive.google.com/drive/folders/1J-LcDfdiySsMW4sWm-beSx4uvzT3odDm). Proves oficials del [Departament d'Educació i Formació Professional](https://educacio.gencat.cat) i de la [Generalitat de Catalunya](https://gencat.cat).
