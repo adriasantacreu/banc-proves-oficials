@@ -1,135 +1,156 @@
-/** Punt d'entrada: cerca instantània + filtres + targetes + carret + fitxa */
+/** Punt d'entrada: estat (cerca + filtres a la URL), llista amb paginació, carret i fitxa */
+import '@fontsource-variable/bricolage-grotesque/wght.css'
+import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-600.css'
+import './styles/estils.css'
 import './styles/app.css'
-import { carregaCatalog, cerca, perId } from './search'
-import { aplicaFiltres, estat, renderFiltres, targeta, type Estat } from './ui'
-import { desa } from './solution'
-import { copiaImatge } from './clipboard'
+import { anyMax, anyMin, carrega, llest, fitxaPerId, filtresBuits, resultats, totalFitxes, unitat, type Faceta, type Filtres } from './data'
+import { esc, pintaFiltres, pintaFitxa, targeta } from './render'
+import { copiaImatge, copiaText } from './clipboard'
 import * as carret from './cart'
-import { obreFitxa, tancaFitxa, imprimeix, buidaFitxa } from './print'
+import type { FitxaCb } from './types'
 
-const input = document.querySelector<HTMLInputElement>('#search-input')!
-const contenidorFiltres = document.querySelector<HTMLDivElement>('#filters')!
-const resultats = document.querySelector<HTMLElement>('#results')!
-const buit = document.querySelector<HTMLElement>('#empty-state')!
-const recompte = document.querySelector<HTMLElement>('#results-count')!
-const panellCarret = document.querySelector<HTMLElement>('#cart-panel')!
-const llistaCarret = document.querySelector<HTMLUListElement>('#cart-llista')!
-const fitxaContingut = document.querySelector<HTMLElement>('#fitxa-contingut')!
+const $ = <T extends HTMLElement>(s: string): T => document.querySelector<T>(s)!
+const PAGINA = 24
+const SUGGERIMENTS = ['matriu', 'probabilitat', 'percentatge', 'energia', 'recta tangent', 'funció']
+let fl: Filtres
+let llista: ReturnType<typeof resultats> = []
+let pintades = 0
 
-const SUGGERIMENTS = ['matriu', 'derivada', 'probabilitat', 'recta tangent', 'pitàgores', 'binomial']
-
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
-
-function pinta(total: number): void {
-  const candidats = aplicaFiltres(cerca(estat.query))
-  renderFiltres(contenidorFiltres, aplicaFiltres(cerca('')))
-  resultats.innerHTML = candidats.map(targeta).join('')
-  recompte.textContent = `${candidats.length.toLocaleString('ca-ES')} de ${total} preguntes`
-  buit.hidden = candidats.length > 0
-  if (candidats.length === 0) {
-    const sug = buit.querySelector<HTMLParagraphElement>('#suggeriments')!
-    sug.innerHTML = SUGGERIMENTS
-      .filter((s) => !estat.query.toLowerCase().includes(s))
-      .slice(0, 4)
-      .map((s) => `<button type="button" data-suggeriment="${s}" class="chip">${s}</button>`)
-      .join(' ')
-  }
+// ---- URL ⇄ estat --------------------------------------------------------
+function llegeixHash(): Filtres {
+  const f = filtresBuits()
+  const p = new URLSearchParams(location.hash.slice(1))
+  f.q = p.get('q') ?? ''
+  for (const k of ['coleccio', 'bloc', 'conv'] as Faceta[]) (p.get(k) ?? '').split('|').filter(Boolean).forEach((v) => f[k].add(v))
+  f.des = Math.max(anyMin, Number(p.get('des')) || anyMin)
+  f.fins = Math.min(anyMax, Number(p.get('fins')) || anyMax)
+  return f
+}
+function escriuHash(): void {
+  const p = new URLSearchParams()
+  if (fl.q) p.set('q', fl.q)
+  for (const k of ['coleccio', 'bloc', 'conv'] as Faceta[]) if (fl[k].size) p.set(k, [...fl[k]].join('|'))
+  if (fl.des !== anyMin) p.set('des', String(fl.des))
+  if (fl.fins !== anyMax) p.set('fins', String(fl.fins))
+  history.replaceState(null, '', p.size ? `#${p}` : location.pathname + location.search)
 }
 
+// ---- llista -------------------------------------------------------------
+function mesTargetes(): void {
+  const tros = llista.slice(pintades, pintades + PAGINA)
+  $('#results').insertAdjacentHTML('beforeend', tros.map(targeta).join(''))
+  pintades += tros.length
+  if (pintades === tros.length) $('#results').querySelectorAll('img').forEach((im, i) => { if (i < 3) { im.loading = 'eager'; im.fetchPriority = i ? 'auto' : 'high' } })
+}
+function actualitza(refiltres = true): void {
+  llista = resultats(fl)
+  pintades = 0
+  $('#results').innerHTML = ''
+  mesTargetes()
+  if (refiltres) pintaFiltres($('#filters'), fl)
+  $('#count').textContent = `${llista.length.toLocaleString('ca-ES')} de ${totalFitxes().toLocaleString('ca-ES')} fitxes`
+  $('#empty').hidden = llista.length > 0
+  $('#sugg').innerHTML = SUGGERIMENTS.map((s) => `<button type="button" data-sugg="${s}">${s}</button>`).join('')
+  escriuHash()
+}
+new IntersectionObserver((e) => { if (e[0].isIntersecting && pintades < llista.length) mesTargetes() }, { rootMargin: '600px' }).observe($('#sentinel'))
+
+// ---- carret -------------------------------------------------------------
+function nomUnitat(id: string): string {
+  const u = unitat(id)
+  if (!u) return id
+  return 'grup' in u ? `${u.fitxa.any} · ${u.fitxa.coleccio} · ${u.fitxa.titol} · ítem ${u.grup.num}` : `${u.fitxa.any} ${u.fitxa.conv} · ${u.fitxa.coleccio} · P${u.fitxa.num} ${u.fitxa.tema ?? ''}`
+}
 function pintaCarret(): void {
-  const ids = carret.llista()
-  document.querySelector<HTMLElement>('#cart-badge')!.textContent = String(ids.length)
-  document.querySelector<HTMLElement>('#cart-count')!.textContent = String(ids.length)
-  llistaCarret.innerHTML = ids
-    .map((id) => {
-      const e = perId(id)
-      const ref = e ? `${e.any} · ${e.etapa.toUpperCase()} · preg. ${e.numero_pregunta}` : id
-      return `<li class="flex items-center gap-2 px-4 py-3 text-sm" data-id="${id}">
-        <span class="flex-1">${esc(ref)}</span>
-        <button data-carret="amunt" class="btn-secondary px-2 py-0.5" aria-label="Puja">↑</button>
-        <button data-carret="avall" class="btn-secondary px-2 py-0.5" aria-label="Baixa">↓</button>
-        <button data-carret="treu" class="btn-secondary px-2 py-0.5 text-red-600" aria-label="Elimina">✕</button>
-      </li>`
-    })
-    .join('')
-  // Refresca l'estat dels botons de les targetes visibles
-  resultats.querySelectorAll<HTMLElement>('article[data-id]').forEach((art) => {
-    const b = art.querySelector<HTMLButtonElement>('[data-accio="carret"]')
-    if (b) b.textContent = carret.hiEs(art.dataset.id!) ? '✓ A la fitxa' : '✚ Afegeix a la fitxa'
+  const ids = carret.llista().filter((id) => unitat(id))
+  $('#cart-badge').textContent = $('#cart-count').textContent = String(ids.length)
+  $('#cart-llista').innerHTML = ids.map((id) => `<li data-id="${id}"><span>${esc(nomUnitat(id))}</span><button data-c="amunt" aria-label="Puja">↑</button><button data-c="avall" aria-label="Baixa">↓</button><button data-c="treu" aria-label="Treu">✕</button></li>`).join('')
+  document.querySelectorAll<HTMLButtonElement>('[data-accio="carret"]').forEach((b) => {
+    const dins = carret.hiEs(b.dataset.id!)
+    b.textContent = dins ? '✓ A la fitxa' : '+ Fitxa'
+    b.classList.toggle('p', dins)
   })
 }
 
-async function init(): Promise<void> {
-  let total = 0
-  try {
-    total = (await carregaCatalog()).length
-  } catch (err) {
-    recompte.textContent = 'No s’ha pogut carregar el catàleg.'
-    console.error(err)
+// ---- events -------------------------------------------------------------
+let temporitzador = 0
+$('#q').addEventListener('input', (ev) => {
+  clearTimeout(temporitzador)
+  temporitzador = window.setTimeout(() => { fl.q = (ev.target as HTMLInputElement).value; llest.then(() => actualitza()) }, 80)
+})
+$('#filters').addEventListener('change', (ev) => {
+  const t = ev.target as HTMLInputElement | HTMLSelectElement
+  if (t.dataset.faceta) {
+    const s = fl[t.dataset.faceta as Faceta]
+    ;(t as HTMLInputElement).checked ? s.add(t.value) : s.delete(t.value)
+  } else if (t.dataset.any) {
+    fl[t.dataset.any as 'des' | 'fins'] = Number(t.value)
+    if (fl.des > fl.fins) fl[t.dataset.any === 'des' ? 'fins' : 'des'] = Number(t.value)
+  }
+  actualitza()
+})
+const neteja = (): void => { const q = fl.q; fl = filtresBuits(); fl.q = q; actualitza() }
+$('#filters').addEventListener('click', (ev) => { if ((ev.target as HTMLElement).dataset.accio === 'neteja') neteja() })
+$('#empty').addEventListener('click', (ev) => {
+  const s = (ev.target as HTMLElement).dataset.sugg
+  if (s) { fl = filtresBuits(); fl.q = s; ($('#q') as HTMLInputElement).value = s; actualitza() }
+})
+
+$('#results').addEventListener('click', (ev) => {
+  const el = (ev.target as HTMLElement).closest<HTMLElement>('button')
+  if (!el) return
+  const carta = el.closest<HTMLElement>('.card')!
+  if (el.dataset.tab) {
+    carta.querySelectorAll<HTMLElement>('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === el)))
+    carta.querySelectorAll<HTMLElement>('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== el.dataset.tab })
     return
   }
-  pinta(total)
+  switch (el.dataset.accio) {
+    case 'carret': carret.toggle(el.dataset.id!); break
+    case 'carret-act': {
+      const f = fitxaPerId(el.dataset.id!) as FitxaCb
+      carret.afegirTots(f.items.map((g) => g.id))
+      break
+    }
+    case 'copia-img': {
+      const solVisible = el.dataset.imgSol && !carta.querySelector<HTMLElement>('[data-pane="sol"]')!.hidden
+      const ruta = solVisible ? el.dataset.imgSol! : el.dataset.img!
+      if (ruta) copiaImatge(ruta, el)
+      break
+    }
+    case 'copia-ref': {
+      const f = fitxaPerId(el.dataset.id!)
+      if (f?.tipus === 'pau') copiaText(`${f.id} — ${f.coleccio} ${f.any} ${f.conv}, ${f.prova}, pregunta ${f.num} (${f.bloc} · ${f.tema})\n\n${f.text}`, el)
+      break
+    }
+  }
+})
+
+window.addEventListener('carret:canvi', pintaCarret)
+$('#cart-button').addEventListener('click', () => { const p = $('#cart-panel'); p.hidden = !p.hidden })
+$('#cart-tanca').addEventListener('click', () => { $('#cart-panel').hidden = true })
+$('#cart-buida').addEventListener('click', () => carret.buidar())
+$('#cart-llista').addEventListener('click', (ev) => {
+  const b = (ev.target as HTMLElement).closest<HTMLElement>('button[data-c]')
+  if (!b) return
+  const id = b.closest<HTMLElement>('li')!.dataset.id!
+  if (b.dataset.c === 'treu') carret.eliminar(id)
+  else carret.moure(id, b.dataset.c === 'amunt' ? -1 : 1)
+})
+const refaFitxa = (): void => { pintaFitxa($('#fitxa-contingut'), ($('#fitxa-sol') as HTMLInputElement).checked) }
+$('#fitxa-genera').addEventListener('click', () => { refaFitxa(); $('#cart-panel').hidden = true; document.body.classList.add('vista-fitxa'); scrollTo(0, 0) })
+$('#fitxa-torna').addEventListener('click', () => document.body.classList.remove('vista-fitxa'))
+$('#fitxa-sol').addEventListener('change', refaFitxa)
+$('#fitxa-imprimeix').addEventListener('click', () => print())
+
+// ---- arrencada ----------------------------------------------------------
+carrega().then(() => {
+  fl = llegeixHash()
+  ;($('#q') as HTMLInputElement).value = fl.q
+  actualitza()
   pintaCarret()
-
-  input.addEventListener('input', () => {
-    estat.query = input.value
-    pinta(total)
-  })
-  contenidorFiltres.addEventListener('click', (ev) => {
-    const b = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-facet]')
-    if (!b || b.disabled) return
-    const actius = (estat as Estat).filtres[b.dataset.facet!]
-    const valor = b.dataset.valor!
-    actius.has(valor) ? actius.delete(valor) : actius.add(valor)
-    pinta(total)
-  })
-
-  // Accions de les targetes: solució / copiar / carret
-  resultats.addEventListener('click', (ev) => {
-    const el = ev.target as HTMLElement
-    const article = el.closest<HTMLElement>('article[data-id]')!
-    const accio = el.closest<HTMLElement>('[data-accio]')?.getAttribute('data-accio')
-    const id = article.dataset.id!
-    if (accio === 'solucio') desa(article, id)
-    else if (accio === 'copiar') copiaImatge(el.closest<HTMLButtonElement>('[data-accio="copiar"]')!.dataset.img!, el.closest<HTMLButtonElement>('[data-accio="copiar"]')!)
-    else if (accio === 'carret') carret.toggle(id)
-  })
-
-  buit.addEventListener('click', (ev) => {
-    const s = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-suggeriment]')
-    if (!s) return
-    input.value = estat.query = s.dataset.suggeriment!
-    pinta(total)
-  })
-  document.querySelector('#reset-filtres')?.addEventListener('click', () => {
-    estat.query = ''
-    input.value = ''
-    Object.values(estat.filtres).forEach((s) => s.clear())
-    pinta(total)
-  })
-
-  // Carret
-  window.addEventListener('carret:canvi', pintaCarret)
-  document.querySelector('#cart-button')!.addEventListener('click', () => (panellCarret.hidden = !panellCarret.hidden))
-  document.querySelector('#cart-tanca')!.addEventListener('click', () => (panellCarret.hidden = true))
-  document.querySelector('#cart-buida')!.addEventListener('click', () => carret.buidar())
-  llistaCarret.addEventListener('click', (ev) => {
-    const fila = (ev.target as HTMLElement).closest<HTMLElement>('li[data-id]')!
-    const accio = (ev.target as HTMLElement).closest<HTMLElement>('[data-carret]')!.getAttribute('data-carret')
-    if (accio === 'amunt') carret.moure(fila.dataset.id!, -1)
-    else if (accio === 'avall') carret.moure(fila.dataset.id!, 1)
-    else if (accio === 'treu') carret.eliminar(fila.dataset.id!)
-  })
-
-  // Fitxa
-  document.querySelector('#fitxa-genera')!.addEventListener('click', () => {
-    obreFitxa(fitxaContingut)
-    panellCarret.hidden = true
-    window.scrollTo(0, 0)
-  })
-  document.querySelector('#fitxa-torna')!.addEventListener('click', tancaFitxa)
-  document.querySelector('#fitxa-imprimeix')!.addEventListener('click', imprimeix)
-  document.querySelector('#fitxa-buida')!.addEventListener('click', () => buidaFitxa(fitxaContingut))
-}
-
-init()
+  document.body.classList.remove('carregant')
+  if (fl.q) { $('#count').textContent = 'Preparant la cerca…'; llest.then(() => actualitza()) }
+  addEventListener('hashchange', () => { fl = llegeixHash(); ($('#q') as HTMLInputElement).value = fl.q; actualitza() })
+}).catch((e) => { $('#count').textContent = 'No s’ha pogut carregar el catàleg.'; console.error(e) })

@@ -1,45 +1,45 @@
-/** Còpia de captures al porta-retalls (US3) amb fallback de descàrrega */
-import { BASE } from './search'
+/** Còpia de captures al porta-retalls (PNG) amb descàrrega de reserva */
+import { BASE } from './data'
 
-/** Converteix qualsevol imatge (WebP) a PNG, format que ClipboardItem accepta */
-async function aPng(blob: Blob): Promise<Blob> {
-  if (blob.type === 'image/png') return blob
+const aPng = async (blob: Blob): Promise<Blob> => {
   const bmp = await createImageBitmap(blob)
-  const canvas = new OffscreenCanvas(bmp.width, bmp.height)
-  canvas.getContext('2d')!.drawImage(bmp, 0, 0)
-  return canvas.convertToBlob({ type: 'image/png' })
+  const c = new OffscreenCanvas(bmp.width, bmp.height)
+  c.getContext('2d')!.drawImage(bmp, 0, 0)
+  return c.convertToBlob({ type: 'image/png' })
 }
 
-function feedback(boto: HTMLButtonElement, text: string): void {
-  const original = boto.textContent
+export function avis(boto: HTMLElement, text: string): void {
+  const orig = boto.dataset.orig ?? boto.textContent ?? ''
+  boto.dataset.orig = orig
   boto.textContent = text
-  boto.disabled = true
-  setTimeout(() => {
-    boto.textContent = original
-    boto.disabled = false
-  }, 1800)
+  setTimeout(() => { boto.textContent = orig }, 1600)
 }
 
-function descarrega(url: string, nom: string): void {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = nom
-  a.click()
-}
-
-/** Copia la captura com a PNG al porta-retalls; si el navegador el bloqueja, ofereix la descàrrega */
-export async function copiaImatge(ruta: string, boto: HTMLButtonElement): Promise<void> {
+export async function copiaImatge(ruta: string, boto: HTMLElement): Promise<void> {
   const url = `${BASE}${ruta}`
   try {
-    if (!('clipboard' in navigator) || !('ClipboardItem' in window)) throw new Error('Clipboard API no disponible')
-    const blob = aPng(await fetch(url).then((r) => {
-      if (!r.ok) throw new Error(`imatge no disponible (${r.status})`)
-      return r.blob()
-    }))
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': await blob })])
-    feedback(boto, 'Copiat!')
+    if (!navigator.clipboard || !('ClipboardItem' in window)) throw new Error('sense porta-retalls')
+    const png = fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status))))).then(aPng)
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+    avis(boto, 'Copiada ✓')
   } catch {
-    descarrega(url, ruta.split('/').pop()!.replace(/\.webp$/, '.png'))
-    feedback(boto, 'Descarregada')
+    const blob = await fetch(url).then((r) => r.blob()).then(aPng)
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = ruta.split('/').pop()!.replace(/\.webp$/, '.png')
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+    avis(boto, 'Descarregada ↓')
+  }
+}
+
+export async function copiaText(text: string, boto: HTMLElement): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+    avis(boto, 'Copiat ✓')
+  } catch {
+    const t = Object.assign(document.createElement('textarea'), { value: text })
+    document.body.append(t); t.select(); document.execCommand('copy'); t.remove()
+    avis(boto, 'Copiat ✓')
   }
 }

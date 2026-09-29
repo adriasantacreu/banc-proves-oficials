@@ -20,7 +20,7 @@ Les captures provenen dels PDF oficials de la Generalitat de Catalunya (PAU, com
 ## Per a desenvolupadors
 
 ```bash
-npm install        # dependències (Vite 8, TypeScript, Tailwind 4, MiniSearch)
+npm install        # dependències (Vite 8, TypeScript, MiniSearch, fonts fontsource)
 npm run dev        # servidor de desenvolupament a /banc-proves-oficials/
 npm run build      # compila a dist/ (valida tipus abans)
 npm run preview    # serveix dist/ en local
@@ -28,14 +28,18 @@ npm run preview    # serveix dist/ en local
 
 ### Arquitectura
 
-- **Front-end**: Vite + TypeScript pur (sense frameworks), Tailwind CSS v4, MiniSearch per a la cerca client-side amb normalització d'accents. Bundle < 15 kB gzip.
-- **Dades**: `public/data/proves.json` (índex pre-generat) + `public/crops/` (captures WebP *lossless* a 200 DPI).
-- **Pipeline** (`scripts/export_catalog.py`, Python + PyMuPDF/OpenCV): llegeix la base `pau_catalog.db` i el registre de `gencat-cb-forms`, retalla els enunciats i solucions dels PDF oficials (amb *fallback* OCR per als PDF amb mapes de caràcters trencats) i converteix tot a WebP.
+- **Front-end**: Vite + TypeScript pur (sense frameworks ni Tailwind), estil B «quadern» (`src/styles/estils.css`, còpia de `_shared/estils/`) + `app.css`. Cerca amb MiniSearch (prefix, difusa, sense accents).
+- **Dades** (només lectura de les dues BD, l'export no retalla res): `public/data/index.json` (fitxes sense text, ~580 KB) + `public/data/text.json` (corpus de cerca, ~1,9 MB, es carrega després del primer pintat) + `public/crops/{pau,cb}` (WebP *lossless*, ~99 MB).
+- **Contingut**: 1005 exercicis PAU (Mat II 528, Mat CCSS 477), 77 activitats CCBB amb 627 ítems, 2526 imatges.
+- **Export** (`scripts/export_dades.py`): llegeix `pau_catalog.db` i `cb_catalog.db`, converteix a WebP i s'atura si els recomptes, els ids o les imatges no quadren.
 
 ```bash
-/mnt/data/workspace/.venv/bin/python scripts/export_catalog.py           # regenera dades + captures
-/mnt/data/workspace/.venv/bin/python scripts/export_catalog.py --check   # valida JSON i imatges
+/mnt/data/workspace/.venv/bin/python scripts/export_dades.py   # regenera dades i valida (0 errors = OK)
 ```
+
+### Qualitat
+
+Lighthouse (servidor amb gzip): escriptori 98 / 100 / 100 / 100, mòbil 87 / 100 / 100 / 100 (rendiment, accessibilitat, bones pràctiques, SEO); CLS 0. El límit del mòbil és el temps de bloqueig (~490 ms) de construir l'índex de cerca.
 
 ### Desplegament
 

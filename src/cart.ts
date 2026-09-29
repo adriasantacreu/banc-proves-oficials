@@ -1,7 +1,5 @@
 /** Carret de preguntes per generar la fitxa (US4): persistència a localStorage */
-const CLAU = 'banc-proves-carret'
-
-export type Ordenacio = { id: string; moure: (offset: number) => void; eliminar: () => void }
+const CLAU = 'banc-proves-carret-v2'
 
 function llegeix(): string[] {
   try {
@@ -15,7 +13,7 @@ function llegeix(): string[] {
 let carret: string[] = llegeix()
 
 function desa(): void {
-  localStorage.setItem(CLAU, JSON.stringify(carret))
+  try { localStorage.setItem(CLAU, JSON.stringify(carret)) } catch { /* mode privat */ }
   window.dispatchEvent(new CustomEvent('carret:canvi'))
 }
 
@@ -53,5 +51,10 @@ export function moure(id: string, offset: number): void {
 
 export function buidar(): void {
   carret = []
+  desa()
+}
+
+export function afegirTots(ids: string[]): void {
+  ids.forEach((id) => { if (!carret.includes(id)) carret.push(id) })
   desa()
 }
